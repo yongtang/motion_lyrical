@@ -39,13 +39,13 @@ source /opt/ros/motion/install/setup.bash \n\
 source /opt/python/bin/activate \n\
 if [ "${MOTION_ARM}" == "PANDA" ]; then \n\
   echo /panda_arm_controller/joint_trajectory \n\
-  parallel --line-buffer --tag --halt now,done=1 --halt now,fail=1 -j 0 ::: "ros2 launch moveit_resources_panda_moveit_config demo.launch.py" \n\
+  parallel --line-buffer --tag --halt now,done=1 --halt now,fail=1 -j 0 ::: "ros2 launch moveit_resources_panda_moveit_config demo.launch.py" "ros2 run motion motion" \n\
 elif [ "${MOTION_ARM}" == "UR20" ]; then \n\
   echo /scaled_joint_trajectory_controller/joint_trajectory \n\
-  parallel --line-buffer --tag --halt now,done=1 --halt now,fail=1 -j 0 ::: "ros2 launch ur_robot_driver ur_control.launch.py ur_type:=ur20 robot_ip:=192.168.0.2 use_mock_hardware:=true launch_rviz:=false" \n\
+  parallel --line-buffer --tag --halt now,done=1 --halt now,fail=1 -j 0 ::: "ros2 launch ur_robot_driver ur_control.launch.py ur_type:=ur20 robot_ip:=192.168.0.2 use_mock_hardware:=true launch_rviz:=false" "ros2 run motion motion" \n\
 elif [ "${MOTION_ARM}" == "UR30" ]; then \n\
   echo /scaled_joint_trajectory_controller/joint_trajectory \n\
-  parallel --line-buffer --tag --halt now,done=1 --halt now,fail=1 -j 0 ::: "ros2 launch ur_robot_driver ur_control.launch.py ur_type:=ur30 robot_ip:=192.168.0.2 use_mock_hardware:=true launch_rviz:=false" \n\
+  parallel --line-buffer --tag --halt now,done=1 --halt now,fail=1 -j 0 ::: "ros2 launch ur_robot_driver ur_control.launch.py ur_type:=ur30 robot_ip:=192.168.0.2 use_mock_hardware:=true launch_rviz:=false" "ros2 run motion motion" \n\
 fi \n\
 exit 0' >/entrypoint.sh
 RUN chmod +x /entrypoint.sh
