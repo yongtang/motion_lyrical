@@ -1,8 +1,12 @@
+import random
+import threading
+import time
+
 import rclpy
+from rclpy.executors import SingleThreadedExecutor
 from rclpy.node import Node
 from sensor_msgs.msg import JointState
 from trajectory_msgs.msg import JointTrajectory, JointTrajectoryPoint
-import random
 
 
 class Motion(Node):
@@ -40,13 +44,24 @@ class Motion(Node):
 def main(args=None):
     rclpy.init(args=args)
     node = Motion()
+    executor = SingleThreadedExecutor()
+    executor.add_node(node)
+
+    thread = threading.Thread(target=executor.spin, daemon=False)
+    thread.start()
     try:
-        rclpy.spin(node)
+        while True:
+            time.sleep(1.0)
+            print("wait...")
+
     except KeyboardInterrupt:
         pass
     finally:
+        executor.shutdown()
+        executor.remove_node(node)
         node.destroy_node()
         rclpy.shutdown()
+        thread.join()
 
 
 if __name__ == "__main__":
