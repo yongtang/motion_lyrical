@@ -56,7 +56,7 @@ class Motion(Node):
         self.get_logger().info(f"Published trajectory: {trajectory}")
 
 
-class MotionMetadata(BatchMetadataOperator):
+class MotionMetadataIn(BatchMetadataOperator):
     def __init__(self, motion: Motion):
         super().__init__()
         self.motion = motion
@@ -68,10 +68,24 @@ class MotionMetadata(BatchMetadataOperator):
             return
 
         for frame_meta in batch_meta.frame_items:
+            frame_meta.joint_state = joint_state
+
             print(
-                f"frame={frame_meta.frame_number}, "
+                f"attach frame={frame_meta.frame_number}, "
                 f"positions={list(joint_state.position)}"
             )
+
+
+class MotionMetadataOut(BatchMetadataOperator):
+    def handle_metadata(self, batch_meta):
+        for frame_meta in batch_meta.frame_items:
+            if hasattr(frame_meta, "joint_state"):
+                print(
+                    f"verify frame={frame_meta.frame_number}, "
+                    f"positions={list(frame_meta.joint_state.position)}"
+                )
+            else:
+                print(f"verify frame={frame_meta.frame_number}, NO METADATA")
 
 
 def main(args=None):
@@ -86,23 +100,26 @@ def main(args=None):
     thread.start()
 
     try:
-        pipeline = Pipeline("motion")
+        while True:
+            (
+                Flow(Pipeline("motion"))
+                .batch_capture(
+                    [
+                        "/opt/nvidia/deepstream/deepstream/"
+                        "samples/streams/sample_720p.h264"
+                    ]
+                )
+                .infer(
+                    "/opt/nvidia/deepstream/deepstream/"
+                    "sources/apps/sample_apps/deepstream-test1/"
+                    "dstest1_pgie_config.yml"
+                )
+                .attach(what=Probe("motion_metadata", MotionMetadataIn(node)))
+                .attach(what=Probe("verify_metadata", MotionMetadataOut()))
+                .render(mode=RenderMode.DISCARD)
+            )()
 
-        flow = (
-            Flow(pipeline)
-            .batch_capture(
-                ["/opt/nvidia/deepstream/deepstream/samples/streams/sample_720p.h264"]
-            )
-            .infer(
-                "/opt/nvidia/deepstream/deepstream/"
-                "sources/apps/sample_apps/deepstream-test1/"
-                "dstest1_pgie_config.yml"
-            )
-        )
-
-        flow.attach(what=Probe("motion_metadata", MotionMetadata(node))).render(
-            mode=RenderMode.DISCARD
-        )()
+            print("DeepStream EOS, restarting...")
 
     except KeyboardInterrupt:
         pass
