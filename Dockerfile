@@ -37,6 +37,7 @@ set -e -x \n\
 source /opt/ros/jazzy/setup.bash \n\
 source /opt/ros/motion/install/setup.bash \n\
 source /opt/python/bin/activate \n\
+export PYTHONPATH=/opt/python/lib/python3.12/site-packages:$PYTHONPATH \n\
 if [ "${MOTION_ARM}" == "PANDA" ]; then \n\
   echo /panda_arm_controller/joint_trajectory \n\
   parallel --line-buffer --tag --halt now,done=1 --halt now,fail=1 -j 0 ::: "ros2 launch moveit_resources_panda_moveit_config demo.launch.py" "ros2 run motion motion" \n\
